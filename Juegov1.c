@@ -295,10 +295,6 @@ void menu_nivel()
 void nivel_facil()
 {
     bordes();
-    for(int i=0;i < 2; i++){
-        enemigos[i].inicioX = 4;
-        enemigos[i].inicioY = 10;
-    }
 }
 
 
@@ -330,6 +326,12 @@ void bordes()
     gotoxy(2,33); printf("%c",200);
     gotoxy(77,3); printf("%c",187);
     gotoxy(77,33); printf("%c",188);
+
+
+    for(int i=0;i < 1; i++){
+        enemigos[i].inicioX = 10;
+        enemigos[i].inicioY = 10;
+    }
 
     OcultarCursor();
     cora();
@@ -453,29 +455,49 @@ void cora()
     return y;
 }
 void enemigo(int x, int y){
+
+    int enemigoX = 0;
+    int enemigoY = 0;
+
+
     for(int i=0;i<2;i++){
+        enemigoX = enemigos[i].inicioX;
+        enemigoY = enemigos[i].inicioY;
+
         if((x >= enemigos[i].inicioX && x <= enemigos[i].inicioX+5) && (y >= enemigos[i].inicioY && y <=enemigos[i].inicioY+4))
         {
-            gotoxy(77,4); printf("se murio el enemigo");
+            gotoxy(enemigoX,enemigoY);   printf("     ");
+            gotoxy(enemigoX,enemigoY+1); printf("     ");
+            gotoxy(enemigoX,enemigoY+2); printf("     ");
+
+            enemigos[i].inicioX = 10;
+            enemigos[i].inicioY = 10;
         }
     }
 }
 
 void enemigosMov(){
-    int x=10, y=4;
+    int x=10, y=10;
 
     for(int i=0; i < 1; i++){
-        enemigos[i].inicioX = x;
-        enemigos[i].inicioY = y;
+        // Extraemos los valores
+        x = enemigos[i].inicioX;
+        y = enemigos[i].inicioY;
 
         gotoxy(x,y);   printf("     ");
         gotoxy(x,y+1); printf("     ");
         gotoxy(x,y+2); printf("     ");
 
-        x++;
+        if(x<72){
+            x++;
+        }
 
         gotoxy(x,y); printf("%c%c%c%c",40,118,118,41);
         gotoxy(x,y+1); printf("%c%c%c%c%c",47,124,124,92,47);
         gotoxy(x,y+2); printf("%c%c%c%c",40,47,92,41);
+
+        // Volvemos a introducir los valores ahora con cambios
+        enemigos[i].inicioX = x;
+        enemigos[i].inicioY = y;
     }
 }
