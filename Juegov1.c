@@ -17,11 +17,12 @@ void bordes();
 void mov();
 void cora();
 int bala();
+int balaEnemiga();
 
 void nivel_facil();
 void nivel_dificil();
-void enemigosMov();
-void enemigo();
+int enemigosMov();
+int enemigo();
 
 //estructura para leer el nombre que se le pone al personaje
 struct name
@@ -34,6 +35,11 @@ struct
         int inicioX, inicioY;
     }enemigos[5];
 
+struct
+    {
+        int balaX;
+        int balaY;
+    }balaE[1];
 
 void gotoxy(int x, int y)
 {
@@ -329,12 +335,11 @@ void bordes()
 
 
     for(int i=0;i < 1; i++){
-        enemigos[i].inicioX = 10;
-        enemigos[i].inicioY = 10;
+        enemigos[i].inicioX = 3;
+        enemigos[i].inicioY = 4;
     }
 
     OcultarCursor();
-    cora();
     mov();
 
     system("PAUSE>arch");
@@ -343,8 +348,9 @@ void bordes()
 
 void mov()
 {
-    int x = 39 , y = 30;
-    int balaX=x, balaY=y, ciclo=0, balaActive=0;
+
+    int x = 39 , y = 30, salud = 3;
+    int balaX=x, balaY=y, balaActive=0, golpes = 0,direccion = 0,auxGolpes=0;
     //int x1 = 39 , y1 = 6;
 
     gotoxy(x,y); printf("%c%c%c%c",40,94,94,41);
@@ -355,7 +361,9 @@ void mov()
     {
         // AGREGAMOS UN INTERVALO O UNA PAUSA PARA QUE EL BUCLE NO CORRA RAPIDO
         Sleep(100);
-        enemigosMov();
+        direccion = enemigosMov(direccion);
+        cora(salud);
+        salud = balaEnemiga(x,y,salud);
 
         // HACEMOS UN BARRIDO DEL PERSONA ANTERIOR
         gotoxy(x,y);   printf("     ");
@@ -397,15 +405,19 @@ void mov()
         }
 
         if(balaY<=4){
-            ciclo = 0;
             balaActive=0;
             gotoxy(balaX,balaY); printf(" ");
         }
 
         if(balaActive == 1){
-            balaY = bala(balaX, balaY, ciclo);
-            enemigo(balaX,balaY);
-            ciclo++;
+            balaY = bala(balaX, balaY);
+            auxGolpes=golpes;
+            golpes = enemigo(balaX,balaY,golpes);
+            if(auxGolpes != golpes){
+                gotoxy(balaX,balaY); printf(" ");
+                balaY=4;
+                balaX=3;
+            }
         }else if(balaActive==0){
             balaX=x;
             balaY=y;
@@ -417,66 +429,115 @@ void mov()
             exit(EXIT_SUCCESS);
         }
 
-        cora();
 
     }while(1);
     getch();
 }
 
+int balaEnemiga(int x,int y,int salud){
+    int enemigoX = 0;
+    int enemigoY = 0;
 
-void cora()
+
+    for(int i=0;i<2;i++){
+        // variables mas simple s
+        enemigoX = enemigos[i].inicioX;
+        enemigoY = enemigos[i].inicioY;
+
+        // si el enemigo vio al jugar dispara
+        if((x+2 == enemigos[i].inicioX+2) && balaE[0].balaY==3){
+            balaE[0].balaX = enemigoX+1;
+            balaE[0].balaY = enemigoY+2;
+        }
+
+        // si la bala fue disparada continua su trayectoria
+        if(balaE[0].balaY != 3){
+            // si la bala alcanza el limite se desaparece
+            if(balaE[0].balaY >= 33){
+                balaE[0].balaY=3;
+                break;
+            }
+
+            // si la bala alcanza al jugador se desaparece y marca daño al jugador
+            if((balaE[0].balaX >= x && balaE[0].balaX <= x+5) && (balaE[0].balaY >= y && balaE[0].balaY <= y+5)){
+                salud--;
+                balaE[0].balaY = 3;
+                break;
+            }
+
+            // borra la bala
+            gotoxy(balaE[0].balaX,balaE[0].balaY); printf(" ");
+            //incrementa su trayectoria
+            balaE[0].balaY++;
+            //se vuelve a pintar
+            gotoxy(balaE[0].balaX,balaE[0].balaY); printf("8");
+        }
+    }
+    // retorna los cambios a la salud
+    return salud;
+}
+
+
+void cora(salud)
 {
-    int corazones = 3;
-    int salud = 100;
-    int Vidas;
+    int corazones = salud;
 
-    gotoxy(56,2); printf("Salud %d", salud);
     gotoxy(68,2); printf("Vidas");
     gotoxy(74,2); printf("     ");
 
-    int i;
-    for(i=0; i<corazones; i++)
+    for(int i=0; i<corazones; i++)
     {
         gotoxy(74+i,2); printf(ROJO_T"%c"RESET_COLOR ,3);
     }
 }
 
- int bala(int x, int y,int ciclo)
+ int bala(int x, int y)
 {
-
-    int a=ciclo;
-
-
+        // se borra
         gotoxy(x,y); printf(" ");
+        //se incrementa la posicon
         y--;
+        // se vuelve a pintar
         gotoxy(x,y); printf("8");
 
 
     return y;
 }
-void enemigo(int x, int y){
+
+int enemigo(int x, int y,int golpes){
 
     int enemigoX = 0;
     int enemigoY = 0;
 
 
     for(int i=0;i<2;i++){
+        // ponemos las posiciones en variables mas simples
         enemigoX = enemigos[i].inicioX;
         enemigoY = enemigos[i].inicioY;
 
-        if((x >= enemigos[i].inicioX && x <= enemigos[i].inicioX+5) && (y >= enemigos[i].inicioY && y <=enemigos[i].inicioY+4))
+        if(((x >= enemigos[i].inicioX && x <= enemigos[i].inicioX+5) && (y >= enemigos[i].inicioY && y <=enemigos[i].inicioY+4)) && golpes >= 5)
         {
+            // se borra al enemigo si murio.
             gotoxy(enemigoX,enemigoY);   printf("     ");
             gotoxy(enemigoX,enemigoY+1); printf("     ");
             gotoxy(enemigoX,enemigoY+2); printf("     ");
 
-            enemigos[i].inicioX = 10;
-            enemigos[i].inicioY = 10;
+            // volver a poner al enemigo incio
+            enemigos[i].inicioX = 3;
+            enemigos[i].inicioY = 4;
+            // reiniciamos su contador de golpes
+            golpes = 0;
+        }
+        if((x >= enemigos[i].inicioX && x <= enemigos[i].inicioX+5) && (y >= enemigos[i].inicioY && y <=enemigos[i].inicioY+4)){
+            // en caso de recibir golpe se incrementa,
+            golpes++;
         }
     }
+
+    return golpes;
 }
 
-void enemigosMov(){
+int enemigosMov(int direccion){
     int x=10, y=10;
 
     for(int i=0; i < 1; i++){
@@ -484,14 +545,28 @@ void enemigosMov(){
         x = enemigos[i].inicioX;
         y = enemigos[i].inicioY;
 
+        // borramos el enemigo
         gotoxy(x,y);   printf("     ");
         gotoxy(x,y+1); printf("     ");
         gotoxy(x,y+2); printf("     ");
 
-        if(x<72){
-            x++;
+        // se establecen limites de interaccion del enemigo
+        if(x>=72){
+            direccion = 1;
+        }
+        if(x<=3){
+            direccion = 0;
         }
 
+        // se elije la direccion del enemigo
+        if(direccion == 0){
+            x++;
+        }
+        if(direccion == 1){
+            x--;
+        }
+
+        //despues se pinta el personaje por encima
         gotoxy(x,y); printf("%c%c%c%c",40,118,118,41);
         gotoxy(x,y+1); printf("%c%c%c%c%c",47,124,124,92,47);
         gotoxy(x,y+2); printf("%c%c%c%c",40,47,92,41);
@@ -500,4 +575,7 @@ void enemigosMov(){
         enemigos[i].inicioX = x;
         enemigos[i].inicioY = y;
     }
+
+    // retornamos la direccion actuak oara la siguiente vez que entre a este ciclo
+    return direccion;
 }
